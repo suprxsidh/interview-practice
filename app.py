@@ -167,7 +167,9 @@ def build_app():
 
         # ── Submit answer ────────────────────────────────────────────────────
         def on_submit(audio_data, session: InterviewSession, rec_start: float):
-            N = 14
+            N = 16  # status, feedback_md, feedback_acc, trick_acc, trick_md, interview_col,
+                    # report_col, report_md, history_md, q_audio, progress, transcript,
+                    # question_md, question_type_md, session, rec_start
             no_change = [gr.update()] * N
 
             def err(msg):
@@ -227,7 +229,7 @@ def build_app():
                     gr.update(visible=False),           # status_md
                     gr.update(value=feedback_text),     # feedback_md
                     gr.update(open=True),               # feedback_accordion
-                    gr.update(value=trick_text, visible=show_trick),  # trick_guide_accordion
+                    gr.update(open=show_trick, visible=show_trick),  # trick_guide_accordion
                     gr.update(value=trick_text),        # trick_guide_md
                     gr.update(visible=False),           # interview_col
                     gr.update(visible=True),            # report_col
@@ -236,6 +238,8 @@ def build_app():
                     gr.update(),                        # question_audio
                     gr.update(),                        # progress_md
                     gr.update(value=transcript_text, visible=True),  # transcript_md
+                    gr.update(),                        # question_md (no change on session end)
+                    gr.update(),                        # question_type_md
                     session,
                     rec_start,
                 ]
@@ -247,29 +251,23 @@ def build_app():
             progress = _session_to_progress(session)
 
             return [
-                gr.update(value="", visible=False),         # status_md
-                gr.update(value=feedback_text),             # feedback_md
-                gr.update(open=True),                       # feedback_accordion
-                gr.update(value=trick_text, visible=show_trick),  # trick_guide_accordion
-                gr.update(value=trick_text),                # trick_guide_md
-                gr.update(),                                # interview_col
-                gr.update(),                                # report_col
-                gr.update(),                                # report_md
-                gr.update(),                                # history_md
-                gr.update(value=next_audio),                # question_audio
-                gr.update(value=progress),                  # progress_md
-                gr.update(value=transcript_text, visible=True),  # transcript_md
+                gr.update(value="", visible=False),                  # status_md
+                gr.update(value=feedback_text),                      # feedback_md
+                gr.update(open=True),                                # feedback_accordion
+                gr.update(open=show_trick, visible=show_trick),      # trick_guide_accordion
+                gr.update(value=trick_text),                         # trick_guide_md
+                gr.update(),                                         # interview_col
+                gr.update(),                                         # report_col
+                gr.update(),                                         # report_md
+                gr.update(),                                         # history_md
+                gr.update(value=next_audio),                         # question_audio
+                gr.update(value=progress),                           # progress_md
+                gr.update(value=transcript_text, visible=True),      # transcript_md
+                gr.update(value=f"**{next_question}**"),             # question_md
+                gr.update(value=type_badge),                         # question_type_md
                 session,
                 time.time(),
             ]
-
-        # Also update question_md + question_type_md after submit
-        def update_question_display(session: InterviewSession):
-            if session and session.questions_asked:
-                q = session.current_question
-                badge = format_question_type_badge(session.current_question_type)
-                return gr.update(value=f"**{q}**"), gr.update(value=badge)
-            return gr.update(), gr.update()
 
         submit_btn.click(
             on_submit,
@@ -279,14 +277,9 @@ def build_app():
                 trick_guide_accordion, trick_guide_md,
                 interview_col, report_col, report_md, history_md,
                 question_audio, progress_md, transcript_md,
+                question_md, question_type_md,
                 session_state, record_start_state,
             ],
-        )
-
-        submit_btn.click(
-            update_question_display,
-            inputs=[session_state],
-            outputs=[question_md, question_type_md],
         )
 
         # ── Restart ──────────────────────────────────────────────────────────
