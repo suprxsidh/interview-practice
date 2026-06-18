@@ -89,7 +89,6 @@ def evaluate_and_continue(
             "summary": "Good warmup answer. Take a breath and get ready for the main interview.",
         }
         session.feedback_per_answer.append(warmup_feedback)
-        session.warmup_questions_asked += 1
         if session.warmup_questions_asked >= session.WARMUP_COUNT:
             session.warmup_complete = True
             # Generate first real question
